@@ -363,10 +363,18 @@ static void msm_restart_prepare(const char *cmd)
 		} else if (!strncmp(cmd, "edl", 3)) {
 			enable_emergency_dload_mode();
 		} else {
+		/*  Yangrujin@bsp 2016/4/6, Unexpect reboot parameter will reboot to Android normally. */
+			pr_notice("%s : cmd is %s, set to reboot mode\n", __func__, cmd);
+			qpnp_pon_set_restart_reason(PON_RESTART_REASON_REBOOT);
 			__raw_writel(0x77665501, restart_reason);
 		}
 	}
-
+	/*  Yangrujin@bsp 2016/4/6, Unexpect reboot parameter will reboot to Android normally. */
+    else {
+        pr_notice("%s : cmd is NULL, set to reboot mode\n", __func__);
+        qpnp_pon_set_restart_reason(PON_RESTART_REASON_REBOOT);
+        __raw_writel(0x77665501, restart_reason);
+    }
 	flush_cache_all();
 
 	/*outer_flush_all is not supported by 64bit kernel*/
