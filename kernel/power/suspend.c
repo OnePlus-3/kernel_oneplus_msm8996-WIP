@@ -34,6 +34,15 @@
 
 #include "power.h"
 
+/* Qiuchangping@BSP 2016-05-19
+   add for when sync filesystem take long time and AP hold sensor
+   sometimes sensor data will block the sleep process alway. */
+#include <linux/gpio.h>
+
+/*the same value come from smp2p_sleepstate.c file*/
+extern int slst_gpio_base_id;
+#define PROC_AWAKE_ID 12 /* 12th bit */
+
 const char *pm_labels[] = { "mem", "standby", "freeze", NULL };
 const char *pm_states[PM_SUSPEND_MAX];
 
@@ -564,7 +573,19 @@ int pm_suspend(suspend_state_t state)
 		return -EINVAL;
 
 	pm_suspend_marker("entry");
+
+	/* Qiuchangping@BSP 2016-05-19
+	   add for when sync filesystem take long time and AP hold sensor
+	   sometimes sensor data will block the sleep process alway. */
+    gpio_set_value(slst_gpio_base_id + PROC_AWAKE_ID, 0);
+
 	error = enter_state(state);
+
+	/* Qiuchangping@BSP 2016-05-19
+	   add for when sync filesystem take long time and AP hold sensor
+	   sometimes sensor data will block the sleep process alway. */
+    gpio_set_value(slst_gpio_base_id + PROC_AWAKE_ID, 1);
+
 	if (error) {
 		suspend_stats.fail++;
 		dpm_save_failed_errno(error);
